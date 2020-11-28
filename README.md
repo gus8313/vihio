@@ -21,11 +21,6 @@ git clone https://www.github.com/gus8313/cbox.git
 cd cbox
 pip3 install -r requirements.txt
 ```
-### Run in docker
-```
-docker build -t cbox cbox/
-docker run -d --name="cbox" --restart on-failure cbox
-...
 
 ### Change the configuration
 You can either update the ```config/default.yml``` file or create a new file named ```config/local.yml```. The keys that are present in the local config will override the ones in the default config. If a key is absent from local config, Cbox will fallback to the value of the default config. I recommend keeping the default config as is and make all the changes in the local config file so that you don't lose them when the default file gets updated from git.
@@ -82,6 +77,12 @@ Run the following to enable and run the service, and see what its status is:
 sudo systemctl enable Cbox.service
 sudo systemctl start Cbox.service
 sudo systemctl status Cbox.service
+```
+
+### Run in docker
+```
+docker build -t cbox cbox/
+docker run -d --name="cbox" --restart on-failure cbox
 ```
 
 ## Dependencies
