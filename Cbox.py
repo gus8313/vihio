@@ -109,6 +109,12 @@ class Device:
         self.topic_to_func = None
         self.availability = "offline"
         self.last_update = 0
+        self.set_mode = None
+        self.set_target_temperature = None
+        self.set_fan_speed = None
+        self.set_power_level = None
+        self.set_timer_state = None
+        self.set_mode = None
 
     def __str__(self):
         return json.dumps({
@@ -139,7 +145,14 @@ class Device:
             'power_level': self.power_level,
             'timer_state': self.timer_state,
             'status': self.status,
-            'mode': self.mode
+            'mode': self.mode,
+            'set_mode': self.set_mode,
+            'set_target_temperature': self.set_target_temperature,
+            'set_fan_speed': self.set_fan_speed,
+            'set_power_level': self.set_power_level,
+            'set_timer_state': self.set_timer_state,
+            'set_mode': self.set_mode
+
         })
 
     def update_state(self, data):
@@ -170,14 +183,14 @@ class Device:
             "temperature_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/target_temp",
             "fan_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/fan_speed",
             "hold_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/power_level",
-            "swing_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/timer",
+            "swing_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/timer_state",
             "availability_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/availability",
 
-            "mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/mode",
-            "temperature_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/target_temp",
-            "fan_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/fan_speed",
-            "hold_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/power_level",
-            "swing_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/timer",
+            "mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_mode",
+            "temperature_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_target_temp",
+            "fan_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_fan_speed",
+            "hold_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_power_level",
+            "swing_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_timer_state",
             "hold_modes": ["1", "2", "3", "4", "5"],
             "modes": ["off", "heat"],
             "fan_modes": ["off", "1", "2", "3", "4", "5", "hi", "auto"],
@@ -263,17 +276,17 @@ class Device:
     def send_mode(self, payload):
         self.house.palazzetti.set_power_state(self.hostname, payload == "heat")
 
-    def send_target_temperature(self, target_temperature):
-        self.house.palazzetti.set_target_temperature(self.hostname, target_temperature)
+    def send_target_temperature(self, set_target_temperature):
+        self.house.palazzetti.set_target_temperature(self.hostname, set_target_temperature)
 
-    def send_fan_speed(self, fan_speed):
-        self.house.palazzetti.set_fan_speed(self.hostname, self.fanspd_val.get(fan_speed,"0"))
+    def send_fan_speed(self, set_fan_speed):
+        self.house.palazzetti.set_fan_speed(self.hostname, self.fanspd_val.get(set_fan_speed,"0"))
 
-    def send_power_level(self, power_level):
-        self.house.palazzetti.set_power_level(self.hostname, power_level)
+    def send_power_level(self, set_power_level):
+        self.house.palazzetti.set_power_level(self.hostname, set_power_level)
 
-    def send_timer(self, timer_state):
-        self.house.palazzetti.set_timer(self.hostname, timer_state)
+    def send_timer(self, set_timer_state):
+        self.house.palazzetti.set_timer(self.hostname, set_timer_state)
 
     def publish_state(self):
         mqtt_client = self.house.mqtt_client
@@ -393,17 +406,17 @@ class PalazzettiAdapter:
     def set_power_state(self, hostname, power_state):
         return self.send_command(hostname, "CMD {}".format(("ON", "OFF")[power_state]))
 
-    def set_target_temperature(self, hostname, target_temperature):
-        return self.send_command(hostname, "SET SETP {}".format(target_temperature))
+    def set_target_temperature(self, hostname, set_target_temperature):
+        return self.send_command(hostname, "SET SETP {}".format(set_target_temperature))
 
-    def set_fan_speed(self, hostname, fan_speed):
-        return self.send_command(hostname, "SET RFAN {}".format(fan_speed))
+    def set_fan_speed(self, hostname, set_fan_speed):
+        return self.send_command(hostname, "SET RFAN {}".format(set_fan_speed))
 
-    def set_power_level(self, hostname, power_level):
-        return self.send_command(hostname, "SET POWR {}".format(power_level))
+    def set_power_level(self, hostname, set_power_level):
+        return self.send_command(hostname, "SET POWR {}".format(set_power_level))
 
-    def set_timer(self, hostname, timer_state):
-        timer_payload = "1" if timer_state == "on" else "0"
+    def set_timer(self, hostname, set_timer_state):
+        timer_payload = "1" if set_timer_state == "on" else "0"
         return self.send_command(hostname, "SET CSST {}".format(timer_payload))
 
     def last_successful_response_age(self):
