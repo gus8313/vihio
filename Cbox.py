@@ -269,7 +269,7 @@ class Device:
     def send_target_temperature(self, target_temperature):
         if self.temp_step == 0.2:
             self.house.palazzetti.set_float_target_temperature(self.hostname, target_temperature)
-       else:
+        else:
             self.house.palazzetti.set_target_temperature(self.hostname, target_temperature)
 
     def send_fan_speed(self, fan_speed):
