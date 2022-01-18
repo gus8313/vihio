@@ -1,0 +1,27 @@
+devices:
+  - name: Living room stove
+    hostname: 192.168.1.173
+mqtt_discovery_prefix: homeassistant
+mqtt_state_prefix: palazzetti/state
+mqtt_command_prefix: palazzetti/command
+mqtt_reset_topic: palazzetti/reset
+mqtt_host: 127.0.0.1
+mqtt_client_name: cbox
+mqtt_discovery: on
+mqtt_config_retain: on
+mqtt_state_retain: on
+#mqtt_username
+#mqtt_password
+
+temperature_unit: °C
+temp_step: 1
+pellet_quantity_unit: kg
+
+refresh_delays:
+  - 2
+  - 5
+  - 10
+refresh_delay_randomness: 0
+offline_timeout: 120
+
+logging_level: INFO

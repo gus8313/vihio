@@ -7,7 +7,6 @@ import paho.mqtt.client as mqtt
 import requests
 import yaml
 
-
 ################
 
 class Device:
@@ -97,6 +96,7 @@ class Device:
         self.timer_sensor_discovery_topic = None
         self.timer_sensor_mqtt_config = None
         self.target_temperature = None
+        self.temp_step = None
         self.room_temperature = None
         self.exit_temperature = None
         self.fumes_temperature = None
@@ -109,12 +109,6 @@ class Device:
         self.topic_to_func = None
         self.availability = "offline"
         self.last_update = 0
-        self.set_mode = None
-        self.set_target_temperature = None
-        self.set_fan_speed = None
-        self.set_power_level = None
-        self.set_timer_state = None
-        self.set_mode = None
 
     def __str__(self):
         return json.dumps({
@@ -137,6 +131,7 @@ class Device:
             'timer_sensor_discovery_topic': self.timer_sensor_discovery_topic,
             'timer_sensor_mqtt_config': self.timer_sensor_mqtt_config,
             'target_temperature': self.target_temperature,
+            'temp_step': self.temp_step,
             'room_temperature': self.room_temperature,
             'exit_temperature': self.exit_temperature,
             'fumes_temperature': self.fumes_temperature,
@@ -145,18 +140,12 @@ class Device:
             'power_level': self.power_level,
             'timer_state': self.timer_state,
             'status': self.status,
-            'mode': self.mode,
-            'set_mode': self.set_mode,
-            'set_target_temperature': self.set_target_temperature,
-            'set_fan_speed': self.set_fan_speed,
-            'set_power_level': self.set_power_level,
-            'set_timer_state': self.set_timer_state,
-            'set_mode': self.set_mode
-
+            'mode': self.mode
         })
 
     def update_state(self, data):
         self.target_temperature = data["SETP"]
+        self.temp_step = self.house.config.temp_step
         self.room_temperature = data["T1"]
         self.exit_temperature = data["T2"]
         self.fumes_temperature = data["T3"]
@@ -183,14 +172,15 @@ class Device:
             "temperature_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/target_temp",
             "fan_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/fan_speed",
             "hold_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/power_level",
-            "swing_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/timer_state",
+            "swing_mode_state_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/timer",
             "availability_topic": self.house.config.mqtt_state_prefix + "/" + self.device_id + "/availability",
 
-            "mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_mode",
-            "temperature_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_target_temp",
-            "fan_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_fan_speed",
-            "hold_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_power_level",
-            "swing_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/set_timer_state",
+            "mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/mode",
+            "temperature_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/target_temp",
+            "temp_step": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/temp_step",
+            "fan_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/fan_speed",
+            "hold_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/power_level",
+            "swing_mode_command_topic": self.house.config.mqtt_command_prefix + "/" + self.device_id + "/timer",
             "hold_modes": ["1", "2", "3", "4", "5"],
             "modes": ["off", "heat"],
             "fan_modes": ["off", "1", "2", "3", "4", "5", "hi", "auto"],
@@ -276,17 +266,17 @@ class Device:
     def send_mode(self, payload):
         self.house.palazzetti.set_power_state(self.hostname, payload == "heat")
 
-    def send_target_temperature(self, set_target_temperature):
-        self.house.palazzetti.set_target_temperature(self.hostname, set_target_temperature)
+    def send_target_temperature(self, target_temperature):
+        self.house.palazzetti.set_target_temperature(self.hostname, target_temperature)
 
-    def send_fan_speed(self, set_fan_speed):
-        self.house.palazzetti.set_fan_speed(self.hostname, self.fanspd_val.get(set_fan_speed,"0"))
+    def send_fan_speed(self, fan_speed):
+        self.house.palazzetti.set_fan_speed(self.hostname, self.fanspd_val.get(fan_speed,"0"))
 
-    def send_power_level(self, set_power_level):
-        self.house.palazzetti.set_power_level(self.hostname, set_power_level)
+    def send_power_level(self, power_level):
+        self.house.palazzetti.set_power_level(self.hostname, power_level)
 
-    def send_timer(self, set_timer_state):
-        self.house.palazzetti.set_timer(self.hostname, set_timer_state)
+    def send_timer(self, timer_state):
+        self.house.palazzetti.set_timer(self.hostname, timer_state)
 
     def publish_state(self):
         mqtt_client = self.house.mqtt_client
@@ -298,6 +288,8 @@ class Device:
                                 self.mode, retain=retain)
             mqtt_client.publish(self.climate_mqtt_config["temperature_state_topic"],
                                 self.target_temperature, retain=retain)
+            mqtt_client.publish(self.climate_mqtt_config["temp_step"],
+                                self.temp_step, retain=retain)
             mqtt_client.publish(self.climate_mqtt_config["fan_mode_state_topic"],
                                 self.fan_speed, retain=retain)
             mqtt_client.publish(self.climate_mqtt_config["hold_state_topic"],
@@ -338,6 +330,7 @@ class Config:
     refresh_delay_randomness = 2
     offline_timeout = 120
     temperature_unit = "°C"
+    temp_step = 1
     pellet_quantity_unit = "kg"
 
     def __init__(self, raw):
@@ -359,6 +352,7 @@ class Config:
         self.refresh_delay_randomness = raw.get("refresh_delay_randomness", self.refresh_delay_randomness)
         self.offline_timeout = raw.get("offline_timeout", self.offline_timeout)
         self.temperature_unit = raw.get("temperature_unit",self.temperature_unit)
+        self.temp_step = raw.get("temp_step",self.temp_step)
         self.pellet_quantity_unit = raw.get("pellet_quantity_unit", self.pellet_quantity_unit)
 
 
@@ -406,17 +400,17 @@ class PalazzettiAdapter:
     def set_power_state(self, hostname, power_state):
         return self.send_command(hostname, "CMD {}".format(("ON", "OFF")[power_state]))
 
-    def set_target_temperature(self, hostname, set_target_temperature):
-        return self.send_command(hostname, "SET SETP {}".format(set_target_temperature))
+    def set_target_temperature(self, hostname, target_temperature):
+        return self.send_command(hostname, "SET STPF {}".format(target_temperature))
 
-    def set_fan_speed(self, hostname, set_fan_speed):
-        return self.send_command(hostname, "SET RFAN {}".format(set_fan_speed))
+    def set_fan_speed(self, hostname, fan_speed):
+        return self.send_command(hostname, "SET RFAN {}".format(fan_speed))
 
-    def set_power_level(self, hostname, set_power_level):
-        return self.send_command(hostname, "SET POWR {}".format(set_power_level))
+    def set_power_level(self, hostname, power_level):
+        return self.send_command(hostname, "SET POWR {}".format(power_level))
 
-    def set_timer(self, hostname, set_timer_state):
-        timer_payload = "1" if set_timer_state == "on" else "0"
+    def set_timer(self, hostname, timer_state):
+        timer_payload = "1" if timer_state == "on" else "0"
         return self.send_command(hostname, "SET CSST {}".format(timer_payload))
 
     def last_successful_response_age(self):

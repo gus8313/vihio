@@ -4,9 +4,9 @@ This program bridges your Palazzetti stove box with Home Assistant.
 
 It uses Home Assistant MQTT discovery mechanism: https://www.home-assistant.io/docs/mqtt/discovery/ 
 
-Checkout the project, either edit ```config/default.yml``` or create a ```config/local.yml``` with the properties you need to override. ```api_username``` and ```api_username``` are your Hi-Kumo app credentials. Then run ```Cbox.py```.
+Checkout the project, either edit ```config/default.yml``` or create a ```config/local.yml``` with the properties you need to override. Then run ```Cbox.py```.
 
-Please use, clone and improve. Some things are not supported. It was tested only with my own devices and installation. This is a very early release, based on reverse engineering of the network traffic. I have no relation to Hitachi (other than using their product) and they may not like it. Use at your own perils.
+Please use, clone and improve. Some things are not supported. It was tested only with my own devices and installation. This is a very early release, based on reverse engineering of the network traffic. I have no relation to Palazzetti (other than using their product) and they may not like it. Use at your own perils.
 
 ## Installation
 
@@ -40,6 +40,7 @@ Property | Usage | Note
 `mqtt_username` | the MQTT broker username | This is needed only if the MQTT broker requires an authenticated connection.
 `mqtt_password` | the MQTT broker password | This is needed only if the MQTT broker requires an authenticated connection.
 `temperature_unit` | the temperature measurement unit | `°C` by default.
+`temp_step` | Step size for temperature set point | set to 1 by default, change to 0.2 (if your box can handle it)  
 `pellets_quantity_unit` | the pellets quantity measurement unit | `kg` by default.
 `refresh_delays` | list of waiting durations before calling the box API to refresh devices state | If you set `[2, 5, 10, 30]` then Cbox will call the Hi-Kumo API to refresh its state after 2s, then 5s, then 10s, and then every 30s. The delay is reset to 2s when Cbox receives a command from HA. Some randomness is added to these delays: every time Cbox needs to wait, it adds or remove up to `logging_delay_randomness/2` to the delay. 
 `refresh_delay_randomness` | maximum number of seconds to add to all the waiting durations | See `refresh_delays`. Use `0` for no randomness.

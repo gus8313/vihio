@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-    name='Vihio',
-    version='0.1.0',
+    name='Cbox',
+    version='0.2.1',
     packages=[''],
-    url='https://github.com/dotvav/vihio',
+    url='https://github.com/gus8313/cbox',
     license='',
     author='dotvav',
     author_email='',
