@@ -267,7 +267,10 @@ class Device:
         self.house.palazzetti.set_power_state(self.hostname, payload == "heat")
 
     def send_target_temperature(self, target_temperature):
-        self.house.palazzetti.set_target_temperature(self.hostname, target_temperature)
+        if self.temp_step == 0.2:
+            self.house.palazzetti.set_float_target_temperature(self.hostname, target_temperature)
+       else:
+            self.house.palazzetti.set_target_temperature(self.hostname, target_temperature)
 
     def send_fan_speed(self, fan_speed):
         self.house.palazzetti.set_fan_speed(self.hostname, self.fanspd_val.get(fan_speed,"0"))
@@ -401,6 +404,9 @@ class PalazzettiAdapter:
         return self.send_command(hostname, "CMD {}".format(("ON", "OFF")[power_state]))
 
     def set_target_temperature(self, hostname, target_temperature):
+        return self.send_command(hostname, "SET SETP {}".format(target_temperature))
+
+    def set_float_target_temperature(self, hostname, target_temperature):
         return self.send_command(hostname, "SET STPF {}".format(target_temperature))
 
     def set_fan_speed(self, hostname, fan_speed):
